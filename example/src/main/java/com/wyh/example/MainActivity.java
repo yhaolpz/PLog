@@ -1,8 +1,8 @@
 package com.wyh.example;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 
 import com.wyh.plog.core.PLog;
@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < 100; i++) {
             PLog.d("wyh", "这是第%d条日志", i);
         }
+        PLog.d("wyh", new String[]{"a", "b", "c"});
     }
 
     public void upload(View view) {

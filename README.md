@@ -19,22 +19,22 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
 在工程的 build.gradle 中添加：
 
 ```java
-	allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
+  allprojects {
+     repositories {
+	   //...
+	   maven { url 'https://jitpack.io' }
+	 }
+  }
 ```
 在应用的  build.gradle 中添加：
 
 ```java
-	dependencies {
-	     implementation 'com.github.yhaolpz:PLog:1.1'
-	}
+  dependencies {
+    implementation 'com.github.yhaolpz:PLog:1.1'
+  }
 ```
 
-# 使用
+## 使用
 
 ##### 1.初始化
 ```java
@@ -53,15 +53,11 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
     //普通打印
     PLog.d("wyh", "This is a log that can be recorded in a file");
 
-    //Format打印
+    //Format
     PLog.d("wyh", "This is a %s", "log");
 
-    //数组打印
-    List<String> list = new ArrayList<>();
-    list.add("a");
-    list.add("b");
-    list.add("c");
-    PLog.d("wyh", list);
+    //数组类型
+    PLog.d("wyh", new String[]{"a", "b", "c"});
     //output: [a,b,c]
 ```
 ##### 3.只记录到日志文件
@@ -91,7 +87,7 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
 ```
 
 
-# 更多
+## 更多
 
 [存储逻辑](https://github.com/yhaolpz/PLog/blob/master/MORE.md)
 
