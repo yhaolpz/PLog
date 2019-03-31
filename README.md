@@ -1,6 +1,8 @@
 # PLog
 [![](https://jitpack.io/v/yhaolpz/PLog.svg)](https://jitpack.io/#yhaolpz/PLog)
 
+[![](https://github.com/yhaolpz/PLog/blob/master/logo.png)]()
+
 PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使用场景，解决异常问题。
 
 ## 特性：
