@@ -34,21 +34,19 @@ enum PLogManagerImpl implements PLogManager {
         return INSTANCE;
     }
 
-    private Context mAppContext;
     private PLog.Config mConfig;
     private LogRecorder mLogRecorder;
     private PLogReceiver mPLogReceiver;
 
     void init(@NonNull PLog.Config config) {
-        PLogPrint.setDebugLevel(config.getLogcatDebugLevel());
+        PLogPrint.setDebugLevel(config.logcatDebugLevel);
         PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init " + config.toString());
         mConfig = config;
-        mAppContext = mConfig.getContext();
         if (TextUtils.isEmpty(mConfig.getLogDir())) {
-            mConfig.setLogDir(FileHelper.getDefaultLogDir(mAppContext).getAbsolutePath());
+            mConfig.setLogDir(FileHelper.getDefaultLogDir(mConfig.application).getAbsolutePath());
             PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init FileHelper.getDefaultLogDir=" + mConfig.getLogDir());
         } else {
-            mConfig.setLogDir(mConfig.getLogDir() + File.separator + AppUtil.getCurProcessName(mAppContext));
+            mConfig.setLogDir(mConfig.getLogDir() + File.separator + AppUtil.getCurProcessName(mConfig.application));
             File dirFile = new File(mConfig.getLogDir());
             if (!dirFile.exists() || !dirFile.isDirectory()) {
                 dirFile.mkdirs();
@@ -58,12 +56,12 @@ enum PLogManagerImpl implements PLogManager {
         PLogExecutor.executeDisk(new Runnable() {
             @Override
             public void run() {
-                FileHelper.cleanOverdueLog(mAppContext, mConfig.getLogDir());
+                FileHelper.cleanOverdueLog(mConfig.application, mConfig.getLogDir(), mConfig.overdueDayMs);
             }
         });
-        PLogLifecycle.init(mAppContext);
+        PLogLifecycle.init(mConfig.application);
         destroyReceiver();
-        registerReceiver(mConfig.getContext());
+        registerReceiver(mConfig.application);
         mLogRecorder = new LogRecorderImpl(mConfig);
     }
 
@@ -148,11 +146,11 @@ enum PLogManagerImpl implements PLogManager {
 
     @Override
     public void upload(@Nullable final UploadListener listener) {
-        if (!NetUtil.isNetworkAvailable(mConfig.getContext())) {
+        if (!NetUtil.isNetworkAvailable(mConfig.application)) {
             PLogPrint.e(PLogTag.INTERNAL_TAG, "upload--> Network not Available !");
             return;
         }
-        if (mConfig.getRecordDebugLevel() == PLog.DebugLevel.NONE) {
+        if (mConfig.recordDebugLevel == PLog.DebugLevel.NONE) {
             PLogPrint.e(PLogTag.INTERNAL_TAG, "upload--> getRecordDebugLevel() == PLog.DebugLevel.NONE !");
             return;
         }
@@ -160,9 +158,9 @@ enum PLogManagerImpl implements PLogManager {
             @Override
             public void readyToUpload() {
                 PLogPrint.d(PLogTag.INTERNAL_TAG, "upload-->prepareUploadAsync readyToUpload");
-                List<File> zipFiles = FileHelper.filterExistsZipFiles(mConfig.getLogDir());
+                List<File> zipFiles = FileHelper.filterExistsZipFiles(mConfig.getLogDir(), mConfig.overdueDayMs);
                 PLogPrint.d(PLogTag.INTERNAL_TAG, "upload-->prepareUploadAsync existsZipFiles size=" + zipFiles.size());
-                final File newZipFile = FileHelper.zipAllUpLogFile(mConfig.getContext(), mConfig.getLogDir(), mConfig.getCipherKey());
+                final File newZipFile = FileHelper.zipAllUpLogFile(mConfig.application, mConfig.getLogDir(), mConfig.cipherKey, mConfig.overdueDayMs);
                 if (newZipFile == null) {
                     PLogPrint.e(PLogTag.INTERNAL_TAG, "upload-->prepareUploadAsync zipAllUpLogFile newZipFile is null");
                 }
@@ -189,8 +187,8 @@ enum PLogManagerImpl implements PLogManager {
     }
 
     void destroyReceiver() {
-        if (mAppContext != null && mPLogReceiver != null) {
-            mAppContext.unregisterReceiver(mPLogReceiver);
+        if (mConfig.application != null && mPLogReceiver != null) {
+            mConfig.application.unregisterReceiver(mPLogReceiver);
             mPLogReceiver = null;
             PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->unregisterReceiver");
         }
@@ -210,7 +208,7 @@ enum PLogManagerImpl implements PLogManager {
 //        filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         filter.addAction(Intent.ACTION_TIME_TICK);
-        mAppContext.registerReceiver(mPLogReceiver, filter);
+        mConfig.application.registerReceiver(mPLogReceiver, filter);
     }
 
 

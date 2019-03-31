@@ -27,22 +27,19 @@ public class LogRecorderImpl implements LogRecorder {
     private LogWriter logWriter;
     private LogFormatter logFormatter;
     private PLog.Config config;
-    private final boolean encryptFlag;
     @PLog.DebugLevel.Level
     private int mDebugLevel;
+    private long mPartFileSizeLimit;
 
     public LogRecorderImpl(final PLog.Config config) {
-        this.mDebugLevel = config.getRecordDebugLevel();
+        this.mDebugLevel = config.recordDebugLevel;
         this.logFormatter = new LogFormatterImpl();
         this.config = config;
-//        encryptFlag = !TextUtils.isEmpty(config.getCipherKey());
-        //不加密
-        encryptFlag = false;
-        PLogPrint.d(PLogTag.INTERNAL_TAG, "LogRecorderImpl--> ?encrypt:" + encryptFlag);
+        this.mPartFileSizeLimit = config.fileSizeLimitDayByte / 3;
         PLogExecutor.executeDisk(new Runnable() {
             @Override
             public void run() {
-                if (!PermissionHelper.hasWriteAndReadStoragePermission(config.getContext())) {
+                if (!PermissionHelper.hasWriteAndReadStoragePermission(config.application)) {
                     PLogPrint.e(PLogTag.INTERNAL_TAG, "LogRecorderImpl-->!hasWriteAndReadStoragePermission");
                     return;
                 }
@@ -61,7 +58,7 @@ public class LogRecorderImpl implements LogRecorder {
             MmapLogWriter mmapLogWriter = new MmapLogWriter();
             String basicInfo = logFormatter.format(PLog.DebugLevel.DEBUG, PLogTag.INTERNAL_TAG, getBasicInfo(config));
             PLogPrint.d(PLogTag.INTERNAL_TAG, "tryInitLogWriter-->basicInfo=" + basicInfo);
-            mmapLogWriter.init(config.getContext(), basicInfo, config.getLogDir(), null);
+            mmapLogWriter.init(config.application, basicInfo, config.getLogDir(), null);
             logWriter = mmapLogWriter;
         } catch (Throwable ex) {
             ex.printStackTrace();
@@ -74,14 +71,14 @@ public class LogRecorderImpl implements LogRecorder {
         if (debugLevel < mDebugLevel || TextUtils.isEmpty(tag) || TextUtils.isEmpty(msg)) {
             return;
         }
-        if (!PermissionHelper.hasWriteAndReadStoragePermission(config.getContext())) {
+        if (!PermissionHelper.hasWriteAndReadStoragePermission(config.application)) {
             PLogPrint.e(PLogTag.INTERNAL_TAG, "log-->!hasWriteAndReadStoragePermission");
             return;
         }
         PLogExecutor.executeDisk(new Runnable() {
             @Override
             public void run() {
-                checkInitAndRecordSync(logFormatter.format(debugLevel, tag, msg), encryptFlag);
+                checkInitAndRecordSync(logFormatter.format(debugLevel, tag, msg));
             }
         });
     }
@@ -92,26 +89,25 @@ public class LogRecorderImpl implements LogRecorder {
      * then write the content to log file.
      *
      * @param msgContent
-     * @param encryptFlag
      */
-    private void checkInitAndRecordSync(String msgContent, boolean encryptFlag) {
+    private void checkInitAndRecordSync(String msgContent) {
         if (TextUtils.isEmpty(msgContent)) {
             return;
         }
         tryInitLogWriter();
         try {
-            logWriter.write(msgContent);
+            logWriter.write(msgContent, mPartFileSizeLimit);
         } catch (Throwable ex) {
             PLogPrint.e(PLogTag.INTERNAL_TAG, "write " + ex.toString());
             ex.printStackTrace();
-            tryWriteLog(msgContent, encryptFlag);
+            tryWriteLog(msgContent);
         }
     }
 
 
-    private void tryWriteLog(String content, boolean encryptFlag) {
+    private void tryWriteLog(String content) {
         try {
-            logWriter.write(content);
+            logWriter.write(content, mPartFileSizeLimit);
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -121,9 +117,9 @@ public class LogRecorderImpl implements LogRecorder {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Android")
                 .append(PLogConstant.FIELD_SEPERATOR)
-                .append(AppUtil.getCurProcessName(config.getContext()))
+                .append(AppUtil.getCurProcessName(config.application))
                 .append(PLogConstant.FIELD_SEPERATOR)
-                .append(AppUtil.getVersionName(config.getContext()))
+                .append(AppUtil.getVersionName(config.application))
                 .append(PLogConstant.FIELD_SEPERATOR)
                 .append("~")
                 .append(PLogConstant.FIELD_SEPERATOR)
@@ -139,7 +135,7 @@ public class LogRecorderImpl implements LogRecorder {
         if (listener == null) {
             return;
         }
-        if (!PermissionHelper.hasWriteAndReadStoragePermission(config.getContext())) {
+        if (!PermissionHelper.hasWriteAndReadStoragePermission(config.application)) {
             PLogPrint.e(PLogTag.INTERNAL_TAG, "prepareUploadAsync-->!hasWriteAndReadStoragePermission");
             PLogExecutor.executeMain(new Runnable() {
                 @Override
@@ -159,7 +155,7 @@ public class LogRecorderImpl implements LogRecorder {
 
                 final String writeFileName = DateUtil.getDate() + PLogConstant.MMAP;
                 // avoid to block write operation, we just rename except the writing log file, have not compress log file
-                FileHelper.renameToUpAllIfNeed(config.getContext(), writeFileName, config.getLogDir());
+                FileHelper.renameToUpAllIfNeed(writeFileName, config.getLogDir(), config.overdueDayMs);
 
                 PLogExecutor.executeMain(new Runnable() {
                     @Override

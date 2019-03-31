@@ -149,58 +149,41 @@ public final class PLog {
 
 
     public static final class Config {
-        private final Context application;
-        private final String gid;
-        @DebugLevel.Level
-        private final int logcatDebugLevel;
-        @DebugLevel.Level
-        private final int recordDebugLevel;
-        private final String cipherKey;
         private String logDir;
+        public final Context application;
+        @DebugLevel.Level
+        public final int logcatDebugLevel;
+        @DebugLevel.Level
+        public final int recordDebugLevel;
+        public final String cipherKey;
+        public final long overdueDayMs;
+        public final long fileSizeLimitDayByte;
 
         @Override
         public String toString() {
             return "Config{" +
                     "application=" + application +
-                    ", gid='" + gid + '\'' +
                     ", logcatDebugLevel=" + logcatDebugLevel +
                     ", recordDebugLevel=" + recordDebugLevel +
                     ", cipherKey='" + cipherKey + '\'' +
                     ", logDir='" + logDir + '\'' +
+                    ", overdueDayMs='" + overdueDayMs + '\'' +
+                    ", fileSizeLimitDayByte='" + fileSizeLimitDayByte + '\'' +
                     '}';
         }
 
         private Config(final Builder builder) {
             this.application = builder.application;
-            this.gid = builder.gid;
             this.logDir = builder.logDir;
             this.logcatDebugLevel = builder.logcatDebugLevel;
             this.recordDebugLevel = builder.recordDebugLevel;
             this.cipherKey = builder.cipherKey;
-        }
-
-        public String getGid() {
-            return gid;
+            this.overdueDayMs = builder.overdueDay * PLogConstant.FORMAT_DAY_MS;
+            this.fileSizeLimitDayByte = builder.fileSizeLimitDay * PLogConstant.FORMAT_MB;
         }
 
         public String getLogDir() {
             return logDir;
-        }
-
-        public Context getContext() {
-            return application;
-        }
-
-        public int getLogcatDebugLevel() {
-            return logcatDebugLevel;
-        }
-
-        public int getRecordDebugLevel() {
-            return recordDebugLevel;
-        }
-
-        public String getCipherKey() {
-            return cipherKey;
         }
 
         void setLogDir(String logDir) {
@@ -209,21 +192,17 @@ public final class PLog {
 
         public static final class Builder {
             private Application application;
-            private String gid;
             private String logDir;
             private String cipherKey;
             @DebugLevel.Level
-            private int logcatDebugLevel;
+            private int logcatDebugLevel = DebugLevel.DEBUG;
             @DebugLevel.Level
-            private int recordDebugLevel;
+            private int recordDebugLevel = DebugLevel.DEBUG;
+            private int overdueDay = 3;
+            private int fileSizeLimitDay = 15;
 
             public Builder(Application application) {
                 this.application = application;
-            }
-
-            public Builder gid(String gid) {
-                this.gid = gid;
-                return this;
             }
 
             /**
@@ -235,7 +214,7 @@ public final class PLog {
             }
 
             /**
-             * 允许输出到logcat的最低debug级别
+             * 允许输出到logcat的最低debug级别，默认为DEBUG级别
              */
             public Builder logcatDebugLevel(@DebugLevel.Level int level) {
                 this.logcatDebugLevel = level;
@@ -243,7 +222,7 @@ public final class PLog {
             }
 
             /**
-             * 允许记录到文件的最低debug级别, 对于record来说NONE不只会禁用记录，也会禁用上传操作
+             * 允许记录到文件的最低debug级别, 对于record来说NONE不只会禁用记录，也会禁用上传操作，默认为DEBUG级别
              */
             public Builder recordDebugLevel(@DebugLevel.Level int level) {
                 this.recordDebugLevel = level;
@@ -251,10 +230,26 @@ public final class PLog {
             }
 
             /**
-             * 日志密钥
+             * 日志密钥，不设置或置null代表不加密，默认为null
              */
             public Builder cipherKey(String cipherKey) {
                 this.cipherKey = cipherKey;
+                return this;
+            }
+
+            /**
+             * 日志过期天数，过期日志将自动清除，默认为3
+             */
+            public Builder overdueDay(int overdueDay) {
+                this.overdueDay = overdueDay;
+                return this;
+            }
+
+            /**
+             * 单天日志文件存储上限，单位 MB，默认为15
+             */
+            public Builder fileSizeLimitDay(int mb) {
+                this.fileSizeLimitDay = mb;
                 return this;
             }
 

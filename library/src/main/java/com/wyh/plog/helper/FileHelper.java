@@ -102,30 +102,30 @@ public final class FileHelper {
     /**
      * 清理过期文件
      */
-    public static void cleanOverdueLog(Context context, String logDirPath) {
+    public static void cleanOverdueLog(Context context, String logDirPath, long overdueDayMs) {
         {
             File file = getSDLogDirFile(context);
             if (file != null) {
-                filterUpLogFile(file.listFiles());
+                filterUpLogFile(file.listFiles(), overdueDayMs);
             }
         }
         {
             File file = getCacheLogDirFile(context);
             if (file != null) {
-                filterUpLogFile(file.listFiles());
+                filterUpLogFile(file.listFiles(), overdueDayMs);
             }
         }
         {
             File file = new File(logDirPath);
-            filterUpLogFile(file.listFiles());
+            filterUpLogFile(file.listFiles(), overdueDayMs);
         }
     }
 
     /**
      * 文件是否过期
      */
-    private static boolean isFileOverdue(File file) {
-        return System.currentTimeMillis() - file.lastModified() > PLogConstant.LOG_OVERDUE_TIME_MS;
+    private static boolean isFileOverdue(File file, long overdueDayMs) {
+        return System.currentTimeMillis() - file.lastModified() > overdueDayMs;
     }
 
     /**
@@ -158,13 +158,13 @@ public final class FileHelper {
      * 主要是为了避免遗漏上传失败时的日志文件
      */
     @NonNull
-    public static List<File> filterExistsZipFiles(String logDiaPath) {
+    public static List<File> filterExistsZipFiles(String logDiaPath, long overdueDayMs) {
         final List<File> zipFiles = new LinkedList<>();
         for (File file : new File(logDiaPath).listFiles()) {
             if (!isFileExist(file)) {
                 continue;
             }
-            if (isFileOverdue(file)) {
+            if (isFileOverdue(file, overdueDayMs)) {
                 file.delete();
                 continue;
             }
@@ -179,14 +179,14 @@ public final class FileHelper {
      * 压缩所有标记为"-up"的可上传的日志后返回压缩文件
      */
     @Nullable
-    public static File zipAllUpLogFile(Context context, String logDirPath, String password) {
+    public static File zipAllUpLogFile(Context context, String logDirPath, String password,long overdueDayMs) {
         if (context == null) {
             return null;
         }
         final ArrayList<File> allUpLogFiles = new ArrayList<>();
         // 扫描有标记-up的日志文件
         if (!TextUtils.isEmpty(logDirPath)) {
-            allUpLogFiles.addAll(filterUpLogFile(new File(logDirPath).listFiles()));
+            allUpLogFiles.addAll(filterUpLogFile(new File(logDirPath).listFiles(), overdueDayMs));
         }
         if (allUpLogFiles.size() == 0) {
             return null;
@@ -231,7 +231,7 @@ public final class FileHelper {
      * 清理无效&过期文件
      */
     @NonNull
-    private static List<File> filterUpLogFile(File[] files) {
+    private static List<File> filterUpLogFile(File[] files, long overdueDayMs) {
         final List<File> upLogFileList = new LinkedList<>();
         if (files == null || files.length == 0) {
             return upLogFileList;
@@ -240,7 +240,7 @@ public final class FileHelper {
             if (!isFileExist(file)) {
                 continue;
             }
-            if (isFileOverdue(file)) {
+            if (isFileOverdue(file, overdueDayMs)) {
                 file.delete();
                 continue;
             }
@@ -259,7 +259,7 @@ public final class FileHelper {
      * @param writeFileName 当天正在写入的日志文件，需要过滤掉。因为在closeAndRenew(true)方法中底层已经把当天的日志文件重命名添加过"-up"了
      * @param logDirPath    日志存放目录
      */
-    public static void renameToUpAllIfNeed(Context context, String writeFileName, String logDirPath) {
+    public static void renameToUpAllIfNeed(String writeFileName, String logDirPath, long overdueDayMs) {
         File logDir = new File(logDirPath);
         final File[] files = logDir.listFiles();
         if (files == null || files.length == 0) {
@@ -269,7 +269,7 @@ public final class FileHelper {
             if (!isFileExist(logFile)) {
                 continue;
             }
-            if (isFileOverdue(logFile)) {
+            if (isFileOverdue(logFile, overdueDayMs)) {
                 logFile.delete();
                 continue;
             }

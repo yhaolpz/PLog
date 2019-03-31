@@ -34,7 +34,9 @@ public class MainActivity extends AppCompatActivity {
 
                 //建议上传成功及时删除日志文件
                 for (File file : files) {
-                    file.deleteOnExit();
+                    if (file.exists()) {
+                        file.delete();
+                    }
                 }
             }
         });

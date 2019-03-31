@@ -18,6 +18,8 @@ public class App extends Application {
         PLog.Config config = new PLog.Config.Builder(this)
                 .logcatDebugLevel(PLog.DebugLevel.DEBUG)
                 .recordDebugLevel(PLog.DebugLevel.DEBUG)
+                .fileSizeLimitDay(15)
+                .overdueDay(3)
                 .cipherKey("123456")
                 .build();
         PLog.init(config);

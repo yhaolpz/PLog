@@ -55,7 +55,7 @@ public class MmapLogWriter implements LogWriter {
     }
 
     @Override
-    public void write(String content) throws Exception {
+    public void write(String content, long partFileSizeLimit) throws Exception {
         if (nativeLogWriter <= 0) {
             return;
         }
@@ -80,7 +80,7 @@ public class MmapLogWriter implements LogWriter {
             writeNum.set(0);
             long fileSize = nativeGetFileSize(nativeLogWriter);
             PLogPrint.d(PLogTag.INTERNAL_TAG, "write--> writeNum>LOG_INTERVAL_LOG_NUM, nativeGetFileSize=" + fileSize);
-            if (fileSize > PLogConstant.LOG_PART_FILE_SIZE_LIMIT) {
+            if (fileSize > partFileSizeLimit) {
                 PLogPrint.d(PLogTag.INTERNAL_TAG, "write-->file size beyond LOG_PART_FILE_SIZE_LIMIT, closeAndRenew");
                 closeAndRenew(false);
                 logFile = new File(logFileDir + File.separator + buildDate + PLogConstant.MMAP);
