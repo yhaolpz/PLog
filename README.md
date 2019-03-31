@@ -90,6 +90,11 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
 ```
 
 
+# 更多
+
+[存储逻辑](https://github.com/yhaolpz/PLog/blob/master/MORE.md)
+
+
 
 
 
