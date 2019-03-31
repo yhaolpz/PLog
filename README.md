@@ -41,6 +41,8 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
             .logDir(mLogDirPath) //日志存放目录，默认优先存储于SD卡
             .logcatDebugLevel(PLog.DebugLevel.DEBUG) //允许输出到Logcat的级别
             .recordDebugLevel(PLog.DebugLevel.DEBUG) //允许记录到日志文件的级别
+            .fileSizeLimitDay(15) //单天日志文件存储上限
+            .overdueDay(3) //日志文件过期天数
             .cipherKey("123456") //日志密钥
             .build();
     PLog.init(config);
