@@ -30,7 +30,7 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
 
 ```java
 	dependencies {
-	     implementation 'com.github.yhaolpz:PLog:v1.0'
+	     implementation 'com.github.yhaolpz:PLog:1.1'
 	}
 ```
 
