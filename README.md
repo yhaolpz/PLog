@@ -16,22 +16,12 @@ PLog 即 Persistence Log，可持久化日志于文件，便于还原用户使�
 
 ## 集成：
 
-在工程的 build.gradle 中添加：
-
 ```java
-  allprojects {
-     repositories {
-	   //...
-	   maven { url 'https://jitpack.io' }
-	 }
-  }
-```
-在应用的  build.gradle 中添加：
+     //配置工程 gradle
+     maven { url 'https://jitpack.io' }
 
-```java
-  dependencies {
-    implementation 'com.github.yhaolpz:PLog:1.1'
-  }
+     // dependencies
+     implementation 'com.github.yhaolpz:PLog:1.1'
 ```
 
 ## 使用
