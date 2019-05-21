@@ -52,7 +52,8 @@ public final class FileHelper {
         if (context == null || !Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             return null;
         }
-        File sdFile = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + context.getApplicationContext().getPackageName() + "/files");
+        File sdFile = new File(Environment.getExternalStorageDirectory() +
+                "/Android/data/" + context.getApplicationContext().getPackageName() + "/files");
         sdFile = new File(sdFile, getDirName(context));
         if (!sdFile.exists() || !sdFile.isDirectory()) {
             sdFile.mkdirs();
@@ -88,15 +89,25 @@ public final class FileHelper {
      * 定义日志路径
      */
     private static String getDirName(Context context) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(PLogConstant.LOG_DIR);
-        stringBuilder.append(File.separator);
-        stringBuilder.append(AppUtil.getCurProcessName(context));
-        return stringBuilder.toString();
+        return PLogConstant.LOG_DIR +
+                File.separator +
+                AppUtil.getCurProcessName(context);
     }
 
     public static boolean isFileExist(File file) {
-        return file != null && file.exists() && file.isFile();
+        return file != null && file.exists();
+    }
+
+    public static boolean isDirExist(File file) {
+        return file != null && file.exists() && file.isDirectory();
+    }
+
+    public static boolean isFileExist(String path) {
+        return isFileExist(new File(path));
+    }
+
+    public static boolean isDirExist(String path) {
+        return isDirExist(new File(path));
     }
 
     /**
@@ -179,7 +190,7 @@ public final class FileHelper {
      * 压缩所有标记为"-up"的可上传的日志后返回压缩文件
      */
     @Nullable
-    public static File zipAllUpLogFile(Context context, String logDirPath, String password,long overdueDayMs) {
+    public static File zipAllUpLogFile(Context context, String logDirPath, String password, long overdueDayMs) {
         if (context == null) {
             return null;
         }

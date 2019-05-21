@@ -4,7 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
+import android.support.annotation.NonNull;
 
 /**
  * Created by wyh on 2019/3/10.
@@ -12,44 +12,41 @@ import android.os.Build;
 
 public class AppUtil {
 
-    public static final String getDeviceModel() {
-        return Build.MODEL;
-    }
+    private static String sVersionName;
+    private static String sCurProcessName;
 
-    public static final int getSDKInt() {
-        return Build.VERSION.SDK_INT;
-    }
-
-    public static final String getVersionName(Context context) {
+    @NonNull
+    public static String getVersionName(@NonNull Context context) {
+        if (sVersionName != null) {
+            return sVersionName;
+        }
         try {
             PackageManager packageManager = context.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            return packageInfo.versionName;
+            return sVersionName = packageInfo.versionName;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return "UNKNOWN";
+            return sVersionName = "UNKNOWN";
         }
     }
 
-    /**
-     * get the process name of the current process considering mutiprocess
-     *
-     * @param context
-     * @return String
-     */
-    public static final String getCurProcessName(Context context) {
-        if (context != null) {
-            int pid = android.os.Process.myPid();
-            ActivityManager mActivityManager = (ActivityManager) context
-                    .getSystemService(Context.ACTIVITY_SERVICE);
-            for (ActivityManager.RunningAppProcessInfo appProcess : mActivityManager
+    @NonNull
+    public static String getCurProcessName(@NonNull Context context) {
+        if (sCurProcessName != null) {
+            return sCurProcessName;
+        }
+        ActivityManager activityManager = (ActivityManager) context
+                .getSystemService(Context.ACTIVITY_SERVICE);
+        if (activityManager != null) {
+            final int pid = android.os.Process.myPid();
+            for (ActivityManager.RunningAppProcessInfo appProcess : activityManager
                     .getRunningAppProcesses()) {
                 if (appProcess.pid == pid) {
-                    return appProcess.processName;
+                    return sCurProcessName = appProcess.processName;
                 }
             }
         }
-        return "UNKNOWN";
+        return sCurProcessName = "UNKNOWN";
     }
 
 }

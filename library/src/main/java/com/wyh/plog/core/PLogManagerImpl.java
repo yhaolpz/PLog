@@ -10,13 +10,13 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.wyh.plog.helper.FileHelper;
+import com.wyh.plog.internal.PLogExceptionHandler;
 import com.wyh.plog.internal.PLogLifecycle;
 import com.wyh.plog.internal.PLogReceiver;
 import com.wyh.plog.record.LogRecorder;
 import com.wyh.plog.record.impl.LogRecorderImpl;
-import com.wyh.plog.upload.UploadListener;
 import com.wyh.plog.upload.PrepareUploadListener;
-import com.wyh.plog.upload.impl.LogUploaderImpl;
+import com.wyh.plog.upload.UploadListener;
 import com.wyh.plog.util.AppUtil;
 import com.wyh.plog.util.LogUtil;
 import com.wyh.plog.util.NetUtil;
@@ -30,39 +30,65 @@ import java.util.List;
 enum PLogManagerImpl implements PLogManager {
     @SuppressLint("StaticFieldLeak") INSTANCE;
 
-    public static PLogManagerImpl getInstance() {
-        return INSTANCE;
-    }
-
     private PLog.Config mConfig;
     private LogRecorder mLogRecorder;
     private PLogReceiver mPLogReceiver;
 
-    void init(@NonNull PLog.Config config) {
-        PLogPrint.setDebugLevel(config.logcatDebugLevel);
-        PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init " + config.toString());
-        mConfig = config;
-        if (TextUtils.isEmpty(mConfig.getLogDir())) {
-            mConfig.setLogDir(FileHelper.getDefaultLogDir(mConfig.application).getAbsolutePath());
-            PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init FileHelper.getDefaultLogDir=" + mConfig.getLogDir());
-        } else {
-            mConfig.setLogDir(mConfig.getLogDir() + File.separator + AppUtil.getCurProcessName(mConfig.application));
-            File dirFile = new File(mConfig.getLogDir());
-            if (!dirFile.exists() || !dirFile.isDirectory()) {
-                dirFile.mkdirs();
-            }
-            PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init LogDir=" + mConfig.getLogDir());
+    public static PLogManagerImpl getInstance() {
+        return INSTANCE;
+    }
+
+    private boolean initialized() {
+        return mConfig != null;
+    }
+
+    void init(PLog.Config config) {
+        if (initialized()) {
+            throw new IllegalArgumentException("PLogManagerImpl Already Init");
         }
+        if (config == null) {
+            throw new IllegalArgumentException("PLogManagerImpl config is null");
+        }
+        mConfig = config;
+        PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init " + config.toString());
+        if (!initLogDir()) {
+            PLogPrint.e(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->initLogDir fail ");
+            return;
+        }
+        PLogPrint.i(PLogTag.INTERNAL_TAG, "PLogManagerImpl-->init LogDir=" + mConfig.getLogDir());
         PLogExecutor.executeDisk(new Runnable() {
             @Override
             public void run() {
                 FileHelper.cleanOverdueLog(mConfig.application, mConfig.getLogDir(), mConfig.overdueDayMs);
             }
         });
+        PLogPrint.setDebugLevel(config.logcatDebugLevel);
         PLogLifecycle.init(mConfig.application);
         destroyReceiver();
         registerReceiver(mConfig.application);
         mLogRecorder = new LogRecorderImpl(mConfig);
+        new PLogExceptionHandler();
+    }
+
+    private boolean initLogDir() {
+        if (TextUtils.isEmpty(mConfig.getLogDir())) {
+            File file = FileHelper.getDefaultLogDir(mConfig.application);
+            if (FileHelper.isDirExist(file)) {
+                mConfig.setLogDir(file.getAbsolutePath());
+            } else {
+                /* no-op */
+            }
+        } else {
+            mConfig.setLogDir(mConfig.getLogDir() + File.separator
+                    + AppUtil.getCurProcessName(mConfig.application));
+            File dirFile = new File(mConfig.getLogDir());
+            if (FileHelper.isDirExist(dirFile)) {
+                /* no-op */
+            } else {
+                dirFile.mkdirs();
+            }
+        }
+        return FileHelper.isDirExist(mConfig.getLogDir());
     }
 
     @Override

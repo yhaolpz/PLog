@@ -6,7 +6,6 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-
 import com.wyh.plog.upload.UploadListener;
 
 import java.lang.annotation.Retention;
@@ -16,9 +15,6 @@ import java.lang.annotation.RetentionPolicy;
  * Created by wyh on 2019/3/10.
  */
 public final class PLog {
-
-    //未初始化
-    private static boolean sNotInit = true;
 
     private PLog() {
 
@@ -30,62 +26,34 @@ public final class PLog {
      * @param config 配置
      */
     public static void init(PLog.Config config) {
-        if (config == null) {
-            throw new IllegalArgumentException("PLogManagerImpl config is null");
-        }
-        if (!sNotInit) {
-            throw new IllegalArgumentException("PLogManagerImpl Already Init");
-        }
-        sNotInit = false;
         PLogManagerImpl.getInstance().init(config);
     }
 
     public static void v(@NonNull String tag, @NonNull String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().v(tag, msg, args);
     }
 
     public static void d(@NonNull String tag, @NonNull String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().d(tag, msg, args);
     }
 
     public static void d(@NonNull String tag, @NonNull Object obj) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().d(tag, obj);
     }
 
     public static void i(@NonNull String tag, @NonNull String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().i(tag, msg, args);
     }
 
     public static void w(@NonNull String tag, @NonNull String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().w(tag, msg, args);
     }
 
     public static void e(@NonNull String tag, @NonNull String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().e(tag, msg, args);
     }
 
     public static void e(@Nullable Throwable tr, @NonNull String tag, @Nullable String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().e(tr, tag, msg, args);
     }
 
@@ -100,9 +68,6 @@ public final class PLog {
      * 只写入到日志文件
      */
     public static void record(@DebugLevel.Level int level, @NonNull String tag, @NonNull String msg) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().record(level, tag, msg);
     }
 
@@ -110,9 +75,6 @@ public final class PLog {
      * 只输出到logcat
      */
     public static void print(@NonNull String tag, @NonNull String msg, @Nullable Object... args) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().print(tag, msg, args);
     }
 
@@ -120,9 +82,6 @@ public final class PLog {
      * 只输出到logcat
      */
     public static void print(@NonNull String tag, @NonNull Object obj) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().print(tag, obj);
     }
 
@@ -130,9 +89,6 @@ public final class PLog {
      * 只输出到logcat
      */
     public static void print(@PLog.DebugLevel.Level int level, @NonNull String tag, @NonNull String msg) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().print(level, tag, msg);
     }
 
@@ -141,9 +97,6 @@ public final class PLog {
      * 注意：建议设置上传监听并在上传成功后及时删除日志文件
      */
     public static void upload(@Nullable UploadListener listener) {
-        if (sNotInit) {
-            return;
-        }
         PLogManagerImpl.getInstance().upload(listener);
     }
 
